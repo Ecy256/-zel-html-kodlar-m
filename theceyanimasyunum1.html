@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE ECY Animation</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        var scene, camera, renderer, clock;
+        var textGeometry, heartShape, iLoveText;
+        var mixer; // For animating models
+        var fontLoader = new THREE.FontLoader();
+        var dancerModels = []; // For storing dancing women models
+
+        init();
+
+        function init() {
+            // Scene, Camera, Renderer Setup
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Lighting
+            var light = new THREE.PointLight(0xFFFFFF, 1, 100);
+            light.position.set(10, 10, 10);
+            scene.add(light);
+
+            // Text Setup - "THE ECY" forming a heart shape
+            fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
+                var material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                var textMesh = [];
+                var letters = ['T', 'H', 'E', 'E', 'C', 'Y'];
+                var angle = Math.PI / 3;
+
+                for (var i = 0; i < letters.length; i++) {
+                    textGeometry = new THREE.TextGeometry(letters[i], {
+                        font: font,
+                        size: 1,
+                        height: 0.1,
+                    });
+
+                    textMesh[i] = new THREE.Mesh(textGeometry, material);
+                    textMesh[i].position.set(Math.cos(angle * i) * 5, Math.sin(angle * i) * 5, 0);
+                    scene.add(textMesh[i]);
+                }
+
+                // "I love" text setup
+                var iLoveMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                var iLoveGeometry = new THREE.TextGeometry('I love', {
+                    font: font,
+                    size: 1,
+                    height: 0.1,
+                });
+                iLoveText = new THREE.Mesh(iLoveGeometry, iLoveMaterial);
+                iLoveText.position.set(0, 0, -10);
+                scene.add(iLoveText);
+
+                // Add Dancing Women Models (GLTF or similar)
+                loadDancingWomenModel();
+            });
+
+            // Camera Position
+            camera.position.z = 15;
+
+            clock = new THREE.Clock();
+            animate();
+        }
+
+        // Function to load dancing women models
+        function loadDancingWomenModel() {
+            var loader = new THREE.GLTFLoader();
+            loader.load('path_to_dancing_women_model.glb', function(gltf) {
+                var model1 = gltf.scene;
+                model1.position.set(-5, 0, -10);
+                scene.add(model1);
+
+                var model2 = gltf.scene.clone();
+                model2.position.set(5, 0, -10);
+                scene.add(model2);
+
+                // Store mixers for animation (if any)
+                mixer = new THREE.AnimationMixer(model1);
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate the heart shape and "I love" text
+            scene.children.forEach(child => {
+                if (child instanceof THREE.Mesh) {
+                    child.rotation.x += 0.01;
+                    child.rotation.y += 0.01;
+                }
+            });
+
+            if (mixer) {
+                mixer.update(clock.getDelta());
+            }
+
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
